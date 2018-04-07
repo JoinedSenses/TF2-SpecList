@@ -1,9 +1,6 @@
-
 #pragma semicolon 1
-
 #include <sourcemod>
 #include <clientprefs>
-#include <morecolors>
 
 #define SPECMODE_NONE 				0
 #define SPECMODE_FIRSTPERSON 		4
@@ -141,12 +138,7 @@ public OnClientDisconnect(client)
 public Action cmdSpecHide(client, args){
 	g_SpecHide[client] = !g_SpecHide[client];
 	SetClientCookie(client, g_hSpecListCookie, g_SpecHide[client] ? "1" : "0");
-	if (g_SpecHide[client]){
-		CPrintToChat(client, "[{LIGHTGREEN}SM{DEFAULT}] You are now {LIGHTGREEN}hidden{default} in spec list");
-	}
-	else{
-		CPrintToChat(client, "[{LIGHTGREEN}SM{DEFAULT}] You are now {LIGHTGREEN}visible{default} in spec list");
-	}
+	PrintToChat(client, "\x01[\x05SM\x01] You are now \x05%s \x01in spec list", (g_SpecHide[client] ? "hidden" : "visible"));
 	return Plugin_Handled;
 }
 // Using 'sm_speclist' to toggle the spectator list per player.
