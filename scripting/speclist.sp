@@ -7,7 +7,7 @@
 #define SPECMODE_3RDPERSON 			5
 #define SPECMODE_FREELOOK	 		6
 
-#define UPDATE_INTERVAL 2.5
+#define UPDATE_INTERVAL 0.5
 #define PLUGIN_VERSION "1.1.3"
 
 new Handle:HudHintTimers[MAXPLAYERS+1];
@@ -192,7 +192,10 @@ public Action:Timer_UpdateHudHint(Handle:timer, any:client)
 			// Are they spectating our player?
 			if (iTarget == client)
 			{
-				Format(szText, sizeof(szText), "%s%N\n", szText, i);
+				if(IsPlayerAdmin(client))
+					Format(szText, sizeof(szText), "%s%N%s\n", szText, i, (g_SpecHide[i] ? " [Hidden]" : ""));
+				else
+					Format(szText, sizeof(szText), "%s%N\n", szText, i);
 				bDisplayHint = true;
 			}
 		}
@@ -225,10 +228,7 @@ public Action:Timer_UpdateHudHint(Handle:timer, any:client)
 			
 			// Are they spectating the same player as User?
 			if (iTarget == iTargetUser)
-				if(g_SpecHide[i])
-					Format(szText, sizeof(szText), "%s%N [Hidden]\n", szText, i);
-				else
-					Format(szText, sizeof(szText), "%s%N\n", szText, i);
+				Format(szText, sizeof(szText), "%s%N%s\n", szText, i, (g_SpecHide[i] ? " [Hidden]" : ""));
 		}
 	}
 	
@@ -255,7 +255,7 @@ CreateHudHintTimer(client)
 	//new AdminId:admin = GetUserAdmin(client);
 	
 	//if (!g_AdminOnly || (g_AdminOnly && GetAdminFlag(admin, Admin_Generic, Access_Effective)))
-	if (!g_AdminOnly || (g_AdminOnly && IsPlayerAdmin(client) && g_SpecHide[client]))
+	if (!g_AdminOnly || (g_AdminOnly && IsPlayerAdmin(client)))
 		HudHintTimers[client] = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHudHint, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
