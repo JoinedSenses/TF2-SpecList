@@ -1,5 +1,6 @@
 # TF2-SpecList
 Spectator List with a modification to allow mods to hide themselves.
+This modification also includes clientprefs to save /spechide preference.
 
 ## Commands:
  * sm_speclist - Show/Hide spec list
