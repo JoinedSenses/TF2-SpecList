@@ -7,7 +7,7 @@
 #define SPECMODE_3RDPERSON 			5
 #define SPECMODE_FREELOOK	 		6
 
-#define UPDATE_INTERVAL 0.5
+#define UPDATE_INTERVAL 1.0
 #define PLUGIN_VERSION "1.1.3"
 
 new Handle:HudHintTimers[MAXPLAYERS+1];
@@ -192,8 +192,8 @@ public Action:Timer_UpdateHudHint(Handle:timer, any:client)
 			// Are they spectating our player?
 			if (iTarget == client)
 			{
-				if(IsPlayerAdmin(client))
-					Format(szText, sizeof(szText), "%s%N%s\n", szText, i, (g_SpecHide[i] ? " [Hidden]" : ""));
+				if(IsPlayerAdmin(client) && g_SpecHide[i])
+					Format(szText, sizeof(szText), "%s%N [Hidden]\n", szText, i);
 				else
 					Format(szText, sizeof(szText), "%s%N\n", szText, i);
 				bDisplayHint = true;
@@ -228,7 +228,10 @@ public Action:Timer_UpdateHudHint(Handle:timer, any:client)
 			
 			// Are they spectating the same player as User?
 			if (iTarget == iTargetUser)
-				Format(szText, sizeof(szText), "%s%N%s\n", szText, i, (g_SpecHide[i] ? " [Hidden]" : ""));
+				if (g_SpecHide[i])
+					Format(szText, sizeof(szText), "%s%N [Hidden]\n", szText, i);
+				else
+					Format(szText, sizeof(szText), "%s%N\n", szText, i);					
 		}
 	}
 	
