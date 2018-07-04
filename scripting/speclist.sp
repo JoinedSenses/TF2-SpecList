@@ -122,11 +122,11 @@ public void OnClientCookiesCached(int client) {
 public void OnClientDisconnect(int client) {
 	if(IsClientInGame(client))
 		KillHudHintTimer(client);
-	SetClientCookie(client, g_hSpecListCookie, g_SpecHide[client] ? "1" : "0");
 }
 public Action cmdSpecHide(int client, int args){
 	g_SpecHide[client] = !g_SpecHide[client];
 	PrintToChat(client, "\x01[\x05SM\x01] You are now \x05%s \x01in spec list", (g_SpecHide[client] ? "hidden" : "visible"));
+	SetClientCookie(client, g_hSpecListCookie, g_SpecHide[client] ? "1" : "0");
 	return Plugin_Handled;
 }
 // Using 'sm_speclist' to toggle the spectator list per player.
