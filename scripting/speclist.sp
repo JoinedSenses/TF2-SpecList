@@ -131,7 +131,7 @@ public Action cmdSpecHide(int client, int args){
 }
 // Using 'sm_speclist' to toggle the spectator list per player.
 public Action Command_SpecList(int client, int args) {
-	if (HudHintTimers[client] != INVALID_HANDLE) {
+	if (HudHintTimers[client] != null) {
 		KillHudHintTimer(client);
 		ReplyToCommand(client, "[SM] Spectator list disabled.");
 	}
@@ -177,7 +177,10 @@ public Action Timer_UpdateHudHint(Handle timer, any client) {
 			
 			// Are they spectating our player?
 			if (iTarget == client) {
-				Format(szText, sizeof(szText), "%s%N%s\n", (IsPlayerAdmin(client) && g_SpecHide[i]) ? " [Hidden]" : "", szText, i);
+				if (g_SpecHide[i])
+					Format(szText, sizeof(szText), "%s%N [Hidden]\n", szText, i);
+				else
+					Format(szText, sizeof(szText), "%s%N\n", szText, i);
 				bDisplayHint = true;
 			}
 		}
@@ -209,7 +212,7 @@ public Action Timer_UpdateHudHint(Handle timer, any client) {
 			
 			// Are they spectating the same player as User?
 			if (iTarget == iTargetUser) {
-				Format(szText, sizeof(szText), "%s%N%s\n", (g_SpecHide[i]) ? " [Hidden]" : "", szText, i);
+				Format(szText, sizeof(szText), "%s%N%s\n", szText, i, g_SpecHide[i] ? " [Hidden]" : "");
 			}
 		}
 	}
@@ -241,9 +244,9 @@ void CreateHudHintTimer(int client) {
 }
 
 void KillHudHintTimer(int client) {
-	if (HudHintTimers[client] != INVALID_HANDLE) {
+	if (HudHintTimers[client] != null) {
 		KillTimer(HudHintTimers[client]);
-		HudHintTimers[client] = INVALID_HANDLE;
+		HudHintTimers[client] = null;
 	}
 }
 
