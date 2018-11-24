@@ -10,29 +10,36 @@
 #define SPECMODE_FREELOOK 6
 
 #define UPDATE_INTERVAL 0.1
-#define PLUGIN_VERSION "1.1.3"
+#define PLUGIN_VERSION "1.1.4"
 
 Handle
-	HudHintTimers[MAXPLAYERS+1]
+	  HudHintTimers[MAXPLAYERS+1]
 	, g_hSpecListCookie;
 ConVar
-	sm_speclist_enabled
+	  sm_speclist_enabled
 	, sm_speclist_allowed
 	, sm_speclist_adminonly
 	, sm_speclist_noadmins;
 bool
-	g_Enabled
+	  g_Enabled
 	, g_AdminOnly
 	, g_NoAdmins
-	, g_SpecHide[MAXPLAYERS+1];
+	, g_SpecHide[MAXPLAYERS+1]
+	, g_bInScore[MAXPLAYERS+1]
+	, g_bLateLoad;
  
 public Plugin myinfo = {
 	name = "Spectator List",
-	author = "GoD-Tony",
-	description = "View who is spectating you in CS:S",
+	author = "GoD-Tony, updated by JoinedSenses",
+	description = "View who is spectating you",
 	version = PLUGIN_VERSION,
 	url = "http://www.sourcemod.net/"
 };
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
+	g_bLateLoad = late;
+	return APLRes_Success;
+}
  
 public void OnPluginStart() {
 	CreateConVar("sm_speclist_version", PLUGIN_VERSION, "Spectator List Version", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
@@ -53,6 +60,19 @@ public void OnPluginStart() {
 	g_NoAdmins = sm_speclist_noadmins.BoolValue;
 	
 	AutoExecConfig(true, "plugin.speclist");
+
+	if (g_bLateLoad) {
+		for (int i = 0; i <= MaxClients; i++) {
+			OnClientPostAdminCheck(i);
+			OnClientCookiesCached(i);
+		}
+	}
+}
+
+public Action OnPlayerRunCmd(int client, int& buttons) {
+	if (HudHintTimers[client] != null) {
+		g_bInScore[client] = (buttons & IN_SCORE) > 0;
+	}
 }
 
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
@@ -110,20 +130,27 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
 }
 
 public void OnClientPostAdminCheck(int client) {
-	if (g_Enabled) {
+	if (g_Enabled && IsValidClient(client)) {
 		CreateHudHintTimer(client);
 	}
 }
 public void OnClientCookiesCached(int client) {
-	char sValue[8];
-	GetClientCookie(client, g_hSpecListCookie, sValue, sizeof(sValue));
-	g_SpecHide[client] = (sValue[0] != '\0' && StringToInt(sValue));
+	if (g_Enabled && IsValidClient(client)) {
+		char sValue[8];
+		GetClientCookie(client, g_hSpecListCookie, sValue, sizeof(sValue));
+		g_SpecHide[client] = (sValue[0] != '\0' && StringToInt(sValue));
+	}
 }  
 public void OnClientDisconnect(int client) {
-	if(IsClientInGame(client))
+	if (g_Enabled && IsValidClient(client)) {
 		KillHudHintTimer(client);
+	}
 }
-public Action cmdSpecHide(int client, int args){
+public Action cmdSpecHide(int client, int args) {
+	if (!g_Enabled) {
+		ReplyToCommand(client, "Speclist disabled");
+		return Plugin_Handled;
+	}
 	g_SpecHide[client] = !g_SpecHide[client];
 	PrintToChat(client, "\x01[\x05SM\x01] You are now \x05%s \x01in spec list", (g_SpecHide[client] ? "hidden" : "visible"));
 	SetClientCookie(client, g_hSpecListCookie, g_SpecHide[client] ? "1" : "0");
@@ -142,13 +169,27 @@ public Action Command_SpecList(int client, int args) {
 	return Plugin_Handled;
 }
 
+void CreateHudHintTimer(int client) {
+	if (!g_AdminOnly || (g_AdminOnly && IsPlayerAdmin(client))) {
+		HudHintTimers[client] = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHudHint, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
+void KillHudHintTimer(int client) {
+	if (HudHintTimers[client] != null) {
+		KillTimer(HudHintTimers[client]);
+		HudHintTimers[client] = null;
+	}
+}
 
 public Action Timer_UpdateHudHint(Handle timer, any client) {
-	int
-		iSpecModeUser = GetEntProp(client, Prop_Send, "m_iObserverMode")
-		, iSpecMode
-		, iTarget
-		, iTargetUser;
+	if (g_bInScore[client]) {
+		return Plugin_Continue;
+	}
+	int iSpecModeUser = GetEntProp(client, Prop_Send, "m_iObserverMode");
+	int iSpecMode;
+	int iTarget;
+	int iTargetUser;
 	bool bDisplayHint;
 	
 	char szText[254];
@@ -233,23 +274,10 @@ public Action Timer_UpdateHudHint(Handle timer, any client) {
 	return Plugin_Continue;
 }
 
-void CreateHudHintTimer(int client) {
-	// If AdminOnly is enabled, make sure we only create timers on admins.
-	//new AdminId:admin = GetUserAdmin(client);
-	
-	//if (!g_AdminOnly || (g_AdminOnly && GetAdminFlag(admin, Admin_Generic, Access_Effective)))
-	if (!g_AdminOnly || (g_AdminOnly && IsPlayerAdmin(client))) {
-		HudHintTimers[client] = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHudHint, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	}
-}
-
-void KillHudHintTimer(int client) {
-	if (HudHintTimers[client] != null) {
-		KillTimer(HudHintTimers[client]);
-		HudHintTimers[client] = null;
-	}
-}
-
 bool IsPlayerAdmin(int client) {
 	return (IsClientInGame(client) && CheckCommandAccess(client, "show_spectate", ADMFLAG_GENERIC));
+}
+
+bool IsValidClient(int client) {
+	return (0 < client <= MaxClients && IsClientConnected(client) && !IsFakeClient(client));
 }
