@@ -56,7 +56,7 @@ public void OnPluginStart() {
 
 	g_hSpecListCookie = RegClientCookie("SpecList_cookie", "Spectator List Cookie", CookieAccess_Protected);
 
-	AutoExecConfig(true, "plugin.speclist");
+	AutoExecConfig();
 
 	g_bEnabled = g_cvarEnabled.BoolValue;
 	g_bAdminOnly = g_cvarAdminOnly.BoolValue;
@@ -72,7 +72,7 @@ public void OnPluginStart() {
 	}
 }
 
-public Action OnPlayerRunCmd(int client, int& buttons) {
+public Action OnPlayerRunCmd(int client, int &buttons) {
 	if (g_hHudHintTimers[client] != null) {
 		g_bInScore[client] = (buttons & IN_SCORE) > 0;
 	}
@@ -159,6 +159,7 @@ public Action cmdSpecHide(int client, int args) {
 	SetClientCookie(client, g_hSpecListCookie, g_bSpecHide[client] ? "1" : "0");
 	return Plugin_Handled;
 }
+
 // Using 'sm_speclist' to toggle the spectator list per player.
 public Action cmdSpecList(int client, int args) {
 	if (g_hHudHintTimers[client] != null) {
@@ -215,7 +216,7 @@ Action Timer_UpdateHudHint(Handle timer, any client) {
 
 			// Are they spectating our player?
 			if (iTarget == client) {
-				Format(szText, sizeof(szText), "%s%N\n%s", szText, i, g_bSpecHide[i] ? "%s%N [Hidden]\n" : "");
+				Format(szText, sizeof(szText), "%s%N%s\n", szText, i, g_bSpecHide[i] ? " [Hidden]" : "");
 				bDisplayHint = true;
 			}
 		}
