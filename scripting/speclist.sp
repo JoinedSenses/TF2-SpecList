@@ -9,7 +9,7 @@
 #define SPECMODE_FREELOOK 6
 
 #define UPDATE_INTERVAL 0.1
-#define PLUGIN_VERSION "1.1.5"
+#define PLUGIN_VERSION "1.1.6"
 
 Handle
 	  g_hHudHintTimers[MAXPLAYERS+1]
