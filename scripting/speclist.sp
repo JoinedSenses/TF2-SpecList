@@ -131,7 +131,7 @@ public void OnClientPostAdminCheck(int client) {
 }
 
 public void OnClientCookiesCached(int client) {
-	if (g_bEnabled && IsValidClient(client)) {
+	if (g_bEnabled) {
 		char sValue[8];
 		GetClientCookie(client, g_hSpecListCookie, sValue, sizeof(sValue));
 		g_bSpecHide[client] = (sValue[0] != '\0' && StringToInt(sValue));
