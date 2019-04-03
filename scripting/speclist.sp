@@ -139,9 +139,8 @@ public void OnClientCookiesCached(int client) {
 }
 
 public void OnClientDisconnect(int client) {
-	if (g_bEnabled && IsValidClient(client)) {
-		delete g_hHudHintTimers[client];
-	}
+	delete g_hHudHintTimers[client];
+	g_bSpecHide[client] = false;
 }
 
 public Action cmdSpecHide(int client, int args) {
